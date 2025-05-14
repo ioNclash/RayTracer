@@ -34,6 +34,7 @@ class hittable_list: public hittable{
                 rec = temp_rec;
             }
         }
+        return hit_anything;
 
     }
 
