@@ -2,6 +2,8 @@
 #define HITTABLE_LIST_H
 
 #include "hittable.h"
+
+#include <memory>
 #include <vector>
 
 using std::make_shared;
@@ -26,7 +28,7 @@ class hittable_list: public hittable{
         auto closest_so_far = ray_tmax;
 
         for (const auto& object: objects){
-            if (object->hit(r, ray_tmin,closest_so_far,temp_rec)){ //Check for all objects in list if there is a hit, and save closest
+            if (object->hit(r, ray_tmin,closest_so_far,temp_rec)){ //Check for all objects in list if there is a hit, and save closest hit point
                 hit_anything=true;
                 closest_so_far = temp_rec.t;
                 rec = temp_rec;
