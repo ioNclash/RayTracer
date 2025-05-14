@@ -7,15 +7,15 @@
 //Check if sphere has been hit
 double hit_sphere(const point3& center, double radius, const ray& r){
     vec3 oc = center- r.origin();
-    auto a = dot(r.direction(),r.direction());
-    auto b = -2.0*dot(r.direction(),oc);
+    auto a = r.direction().length_squared(); //a dot a = a
+    auto h = dot(r.direction(),oc); //simplified quadratic equation due to factor of 2
     auto c = dot(oc,oc) - radius*radius;
-    auto discriminant = b*b - 4*a*c;
+    auto discriminant = h*h - a*c;
     if (discriminant<0){
         return -1.0;
     }
     else{
-        return (-b - std::sqrt(discriminant))/ (2.0*a); // Return hit point
+        return ( h- std::sqrt(discriminant))/ a; // Return hit point
     }
 }
 
@@ -37,7 +37,7 @@ int main(){
     //Image
 
     auto aspect_ratio = 16.0/9.0;
-    int image_width = 400;
+    int image_width = 3840;
 
     //Calculate image height, ensure it is at least 1
     int image_height = int(image_width / aspect_ratio);
