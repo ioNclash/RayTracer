@@ -41,6 +41,14 @@ class vec3{
         return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
 
+    static vec3 random(){ //Static so it can be called without an instance of vec3 needed
+        return vec3(random_double(),random_double(),random_double());
+    }
+
+    static vec3 random(double min, double max){
+        return vec3(random_double(min,max),random_double(min,max),random_double(min,max));
+    }
+
 
 };
 
@@ -89,6 +97,16 @@ inline vec3 cross(const vec3& u, const vec3& v) {
 
 inline vec3 unit_vector(const vec3& v) {
     return v / v.length();
+}
+
+inline vec3 random_unit_vector(){
+    while(true){
+        auto p = vec3::random(-1,1); //generate a random point
+        auto lensq = p.length_squared();
+        if (lensq<=1){ //Length squared compared to radius squared, 1^2 =1 obvs (vector is in sphere)
+            return p/ sqrt(lensq); //normalises to make unit vector
+        }
+    }
 }
 
 #endif
