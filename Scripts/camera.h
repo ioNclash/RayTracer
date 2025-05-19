@@ -2,6 +2,7 @@
 #define CAMERA_H
 
 #include "hittable.h"
+#include "material.h"
 
 class camera{
     public:
@@ -95,8 +96,9 @@ class camera{
         if (world.hit(r, interval(0.001, infinity), rec)) { // 0.001 to prevent reinteraction with surface
             ray scattered;
             color attenuation;
-            if (rec.mat->scatter(r, rec, attenuation, scattered))
+            if (rec.mat->scatter(r, rec, attenuation, scattered)){
                 return attenuation * ray_color(scattered, depth-1, world);
+            }
             return color(0,0,0);
         }
 
