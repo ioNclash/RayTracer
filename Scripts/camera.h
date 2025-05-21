@@ -3,6 +3,10 @@
 
 #include "hittable.h"
 #include "material.h"
+#include <vector>
+#include <thread>
+
+
 
 class camera{
     public:
@@ -10,6 +14,8 @@ class camera{
     int image_width = 100;
     int samples_per_pixel = 10;
     int max_depth = 10; //Maximum number of ray bounces into scene
+    int number_of_threads = std::thread::hardware_concurrency();
+
 
     double vfov = 90; //Vertical fov
     point3 lookfrom = point3(0,0,0); //point camera looks from
@@ -21,20 +27,47 @@ class camera{
 
     void render(const hittable& world){
         initialize();
+        
+        std::vector<std::thread> threads;
+        std::vector<std::vector<color>> image(image_height, std::vector<color>(image_width));
+        int rows_per_thread = image_height/number_of_threads;
+        for (int t = 0; t < number_of_threads; ++t) {
+            int start = t * rows_per_thread;
+            int end = (t == number_of_threads - 1) ? image_height : start + rows_per_thread;
+            threads.emplace_back([this,t, &image, start, end, &world]() {
+                render_rows(t,image, start, end, world);
+            });
+        }
+
 
         std::cout << "P3\n" << image_width << " " << image_height << "\n255\n";
+        // Wait for all threads to finish
+        for (auto& t : threads) {
+            t.join();
+        }
+
         for(int j=0;j<image_height;j++){
-            std::clog << "\rScanlines remaining " << (image_height - j) << ' ' << std::flush;
             for(int i=0;i<image_width;i++){
+                write_color(std::cout,image[j][i]);
+            }
+        }
+        std::clog << "\rDone.                 \n";
+    }
+
+    void render_rows(int thread_num, std::vector<std::vector<color>> &image, int start_height, int end_height, const hittable& world){
+        for (int j = start_height; j < end_height ;++j){
+            for(int i =0; i<image_width; ++i){
                 color pixel_color(0,0,0);
                 for (int sample=0; sample<samples_per_pixel; sample++){
                     ray r = get_ray(i,j);
                     pixel_color += ray_color(r,max_depth,world);
                 }
-                write_color(std::cout, pixel_samples_scale * pixel_color);
+                image[j][i] = pixel_color;
+                
+
             }
+            std::clog <<end_height-1-j<< " Rows remaining on thread "<< thread_num<<"\n";
         }
-        std::clog << "\rDone.                 \n";
     }
 
     private:
