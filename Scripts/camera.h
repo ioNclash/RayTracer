@@ -14,7 +14,7 @@ class camera{
     int image_width = 100;
     int samples_per_pixel = 10;
     int max_depth = 10; //Maximum number of ray bounces into scene
-    int number_of_threads = std::thread::hardware_concurrency();
+    
 
 
     double vfov = 90; //Vertical fov
@@ -27,10 +27,13 @@ class camera{
 
     void render(const hittable& world){
         initialize();
+
         
+        int number_of_threads = std::thread::hardware_concurrency();
         std::vector<std::thread> threads;
         std::vector<std::vector<color>> image(image_height, std::vector<color>(image_width));
         int rows_per_thread = image_height/number_of_threads;
+        std::clog << number_of_threads << " Threads Initialised";
         for (int t = 0; t < number_of_threads; ++t) {
             int start = t * rows_per_thread;
             int end = (t == number_of_threads - 1) ? image_height : start + rows_per_thread;
@@ -48,7 +51,7 @@ class camera{
 
         for(int j=0;j<image_height;j++){
             for(int i=0;i<image_width;i++){
-                write_color(std::cout,image[j][i]);
+                write_color(std::cout,pixel_samples_scale*image[j][i]);
             }
         }
         std::clog << "\rDone.                 \n";
@@ -66,7 +69,7 @@ class camera{
                 
 
             }
-            std::clog <<end_height-1-j<< " Rows remaining on thread "<< thread_num<<"\n";
+            std::clog << "\rThread " << thread_num << ": " << (end_height - 1 - j) << " rows remaining." << std::flush;
         }
     }
 
