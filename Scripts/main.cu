@@ -5,6 +5,8 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     if(result){
         std::cerr << "CUDA error =" << static_cast<unsigned int>(result) << " at " <<
         file << ":" << line << " '" << func << "' \n";
+
+        //Ensure device reset on exit
         cudaDeviceReset();
         exit(99);
     }
@@ -22,9 +24,14 @@ __global__ void render(float *fb, int max_x, int max_y){
 
 
 __host__ int main(){
+
     int nx = 1600;  // image width
     int ny = 900;   // image height
+    int tx = 8;
+    int ty = 8;
 
+    std::cerr << "Rendering a " << nx << "x" << ny << " image ";
+    std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
     int num_pixels = nx*ny;
     size_t fb_size = 3*num_pixels*sizeof(float); //frame buffer
@@ -35,8 +42,6 @@ __host__ int main(){
 
 
     //Render buffer
-    int tx = 8;
-    int ty = 8;
 
     dim3 blocks(nx/tx+1,ny/ty+1);
     dim3 threads(tx,ty);
