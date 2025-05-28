@@ -23,11 +23,12 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 }
 
 __global__ void render(color *fb, int max_x, int max_y,
-    point3 top_left_pixel, vec3  pixel_width, vec3 pixel_height, point3 camera_center){
+    point3 bottom_left_pixel, vec3  pixel_width, vec3 pixel_height, point3 camera_center){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return; //Due to block size, prevent rendering outside of image
-    point3 pixel_center = top_left_pixel + (i*pixel_width) + (j*pixel_height);
+
+    point3 pixel_center = bottom_left_pixel + (i*pixel_width) + (j*pixel_height);
     vec3 ray_direction = pixel_center - camera_center;
     ray r(camera_center,ray_direction);
     int pixel_index = j*max_x + i; //get index in frame buffer
@@ -51,13 +52,13 @@ __host__ int main(){
 
     //Calculate vectors across viewport edges
     vec3 viewport_u = vec3(viewport_width,0,0);
-    vec3 viewport_v = vec3(0, -viewport_height,0);
+    vec3 viewport_v = vec3(0,viewport_height,0); //+ here to make pixel00 the bottom left pixel
 
     vec3 pixel_delta_u = viewport_u/image_width;
     vec3 pixel_delta_v = viewport_v/image_height;
 
-    point3 viewport_upper_left = camera_center - vec3(0,0,focal_length) - viewport_u/2 - viewport_v/2;
-    point3 pixel00_loc = viewport_upper_left + 0.5f * (pixel_delta_u + pixel_delta_v);
+    point3 viewport_bottom_left = camera_center - vec3(0,0,focal_length) - viewport_u/2 - viewport_v/2;
+    point3 pixel00_loc = viewport_bottom_left + 0.5f * (pixel_delta_u + pixel_delta_v);
 
 
     //CUDA Image Division
