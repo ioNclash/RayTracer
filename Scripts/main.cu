@@ -4,19 +4,9 @@
 
 #include <iostream>
 
-__device__ bool hit_sphere(const point3& center, float radius, const ray& r){
-    vec3 oc= center-r.origin();
-    float a = dot(r.direction(),r.direction());
-    float b = -2.0f * dot(r.direction(),oc);
-    float c = dot(oc,oc) - radius*radius;
-    float discriminant = b*b -4*a*c;
-    return (discriminant>=0);
-}
 
 __device__ color ray_color(const ray&r) {
-    if (hit_sphere(point3(0,0,-1), 0.5, r)){
-        return color(1, 0, 0);
-    }
+
     vec3 unit_direction = unit_vector(r.direction());
     float a = 0.5f*(unit_direction.y() + 1.0f);
     return (1.0f-a)*color(1.0f, 1.0f, 1.0f) + a*color(0.5f, 0.7f, 1.0f);
