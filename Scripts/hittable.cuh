@@ -1,8 +1,6 @@
 #ifndef HITTABLE_CUH
 #define HITTABLE_H
 
-#include "ray.cuh"
-
 struct hit_record{
     float t;
     vec3 p;

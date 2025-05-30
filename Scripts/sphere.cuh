@@ -1,8 +1,7 @@
 #ifndef SPHERE_CUH
 #define SPHERE_CUH
 
-#include "hittable.cuh"
-#include "vec3.cuh"
+
 
 class sphere: public hittable {
     public:

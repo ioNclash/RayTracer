@@ -1,15 +1,20 @@
-#include "color.cuh"
-#include "ray.cuh"
-#include "vec3.cuh"
+#include "utility_header.cuh"
 
-#include <iostream>
+#include "hittable.cuh"
+#include "hittable_list.cuh"
+#include "sphere.cuh"
 
 
-__device__ color ray_color(const ray&r) {
-
-    vec3 unit_direction = unit_vector(r.direction());
-    float a = 0.5f*(unit_direction.y() + 1.0f);
-    return (1.0f-a)*color(1.0f, 1.0f, 1.0f) + a*color(0.5f, 0.7f, 1.0f);
+__device__ color ray_color(const ray&r, hittable **world) {
+    hit_record rec;
+    if ((*world)->hit(r,0.0f,infinity,rec)){
+        return 0.5f*vec3(rec.normal.x()+1.0f, rec.normal.y()+1.0f, rec.normal.z()+1.0f);
+    }
+    else {
+      vec3 unit_direction = unit_vector(r.direction());
+      float t = 0.5f*(unit_direction.y() + 1.0f);
+      return (1.0f-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+   }
 }
 
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__)
@@ -25,7 +30,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 }
 
 __global__ void render(color *fb, int max_x, int max_y,
-    point3 bottom_left_pixel, vec3  pixel_width, vec3 pixel_height, point3 camera_center){
+    point3 bottom_left_pixel, vec3  pixel_width, vec3 pixel_height, point3 camera_center, hittable **world){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return; //Due to block size, prevent rendering outside of image
@@ -34,7 +39,22 @@ __global__ void render(color *fb, int max_x, int max_y,
     vec3 ray_direction = pixel_center - camera_center;
     ray r(camera_center,ray_direction);
     int pixel_index = j*max_x + i; //get index in frame buffer
-    fb[pixel_index] = ray_color(r);
+    fb[pixel_index] = ray_color(r,world);
+}
+
+__global__ void create_world(hittable **d_list, hittable **d_world ){
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        *(d_list)   = new sphere(vec3(0,0,-1), 0.5);
+        *(d_list+1) = new sphere(vec3(0,-100.5,-1), 100);
+        *d_world    = new hittable_list(d_list,2);
+    }
+
+}
+
+__global__ void free_world(hittable **d_list, hittable **d_world) {
+    delete *(d_list);
+    delete *(d_list+1);
+    delete *d_world;
 }
 
 
@@ -77,12 +97,22 @@ __host__ int main(){
     color *fb;
     checkCudaErrors(cudaMallocManaged((void **)&fb , fb_size));
 
+    //Make World of hittables
+    hittable **d_list;
+    checkCudaErrors(cudaMalloc((void **) &d_list, 2*sizeof(hittable *)));
+
+    hittable **d_world;
+    checkCudaErrors(cudaMalloc((void **) &d_world, sizeof(hittable *)));
+    create_world<<<1,1>>>(d_list,d_world);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
 
     //Render buffer
 
     dim3 blocks(image_width/tx+1,image_height/ty+1);
     dim3 threads(tx,ty);
-    render<<<blocks, threads>>>(fb,image_width,image_height,pixel00_loc,pixel_delta_u,pixel_delta_v,camera_center);
+    render<<<blocks, threads>>>(fb,image_width,image_height,pixel00_loc,pixel_delta_u,pixel_delta_v,camera_center,d_world);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -94,7 +124,15 @@ __host__ int main(){
             write_color(std::cout,fb[pixel_index]);
         }
     }
+
+    //Cleanup
+    checkCudaErrors(cudaDeviceSynchronize());
+    free_world<<<1,1>>>(d_list,d_world);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaFree(d_list));
+    checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(fb));
+    cudaDeviceReset();
 }
 
 

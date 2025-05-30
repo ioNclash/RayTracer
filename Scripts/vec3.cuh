@@ -1,9 +1,6 @@
 #ifndef VEC3_CUH
 #define VEC3_CUH
 
-#include <cmath>
-#include <iostream>
-
 class vec3{
     public:
     //Vec3 Float Array

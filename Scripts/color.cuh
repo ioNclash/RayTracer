@@ -2,7 +2,7 @@
 #define COLOR_CUH
 
 #include "vec3.cuh"
-#include <iostream>
+
 
 using color = vec3;
 
