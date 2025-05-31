@@ -7,7 +7,7 @@
 
 __device__ color ray_color(const ray&r, hittable **world) {
     hit_record rec;
-    if ((*world)->hit(r,0.0f,infinity,rec)){
+    if ((*world)->hit(r,interval(0,infinity),rec)){
         return 0.5f*vec3(rec.normal.x()+1.0f, rec.normal.y()+1.0f, rec.normal.z()+1.0f);
     }
     else {

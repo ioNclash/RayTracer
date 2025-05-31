@@ -19,6 +19,7 @@ __host__ __device__ inline float degrees_to_radians(float degrees){
 
 //Common Headers
 #include "color.cuh"
+#include "interval.cuh"
 #include "ray.cuh"
 #include "vec3.cuh"
 
