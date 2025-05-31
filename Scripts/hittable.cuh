@@ -1,5 +1,5 @@
 #ifndef HITTABLE_CUH
-#define HITTABLE_H
+#define HITTABLE_CUH
 
 struct hit_record{
     float t;
