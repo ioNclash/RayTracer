@@ -51,17 +51,26 @@ class camera{
     }
 
 
-    __device__ color ray_color(const ray&r, hittable **world) {
+    __device__ color ray_color(curandState *rand_state,const ray&r, hittable **world) {
+        ray current_ray = r;
+        float current_attenuation = 1.0f;
+        for(int i=0; i<50; i++){
             hit_record rec;
-            if ((*world)->hit(r,interval(0,infinity),rec)){
-                return 0.5f*vec3(rec.normal.x()+1.0f, rec.normal.y()+1.0f, rec.normal.z()+1.0f);
+            if ((*world)->hit(current_ray,interval(0.001f,infinity),rec)){
+                vec3 direction = rec.normal + random_unit_vector(rand_state);
+                current_attenuation *=0.5f; //Attenuation factor
+                current_ray = ray(rec.p,direction);
             }
-            else {
-            vec3 unit_direction = unit_vector(r.direction());
-            float t = 0.5f*(unit_direction.y() + 1.0f);
-            return (1.0f-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+            else{
+                vec3 unit_direction = unit_vector(current_ray.direction());
+                float t = 0.5f*(unit_direction.y() + 1.0f);
+                vec3 c = (1.0f-t)*vec3(1.0, 1.0, 1.0) + t*vec3(0.5, 0.7, 1.0);
+                return current_attenuation * c;
+            }
         }
+        return color(0,0,0);
     }
+
 
     __device__ ray get_ray(int i, int j, curandState *rand_state) {
         //Generate a ray from the camera to the pixel at (i,j)
@@ -84,6 +93,7 @@ class camera{
     point3 pixel00_loc;
     vec3 pixel_delta_u;
     vec3 pixel_delta_v;
+    int max_depth = 50;
     __host__ void initialize(){
         //Image
         image_height = int(image_width/aspect_ratio);
@@ -108,7 +118,7 @@ class camera{
 
     }
     __device__ vec3 sample_square(curandState *rand_state) const{
-        return vec3(curand_uniform(rand_state)-0.5f, curand_uniform(rand_state)-0.5f, 0);
+        return vec3(random_float(rand_state)-0.5f,random_float(rand_state)-0.5f, 0);
     }
 
 };
@@ -133,7 +143,7 @@ __global__ void render(color *fb, hittable **world,camera *cam, curandState *ran
     color pixel_color(0,0,0);
     for(int s=0; s< cam->get_sample_count(); s++){
         ray r = cam->get_ray(i,j,&local_rand_state);
-        pixel_color += cam->ray_color(r, world);
+        pixel_color += cam->ray_color(&local_rand_state,r, world);
     }
     fb[pixel_index] = pixel_color*1/(cam->get_sample_count());
 }

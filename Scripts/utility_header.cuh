@@ -28,6 +28,17 @@ __host__ __device__ inline float degrees_to_radians(float degrees){
     return degrees*pi / 100;
 }
 
+//CUDA Random
+__device__ inline float random_float(curandState *local_rand_state){
+    //Returns a random float in [0,1]
+    return curand_uniform(local_rand_state);
+}
+
+__device__ inline float random_float(curandState *local_rand_state, float min, float max){
+    //Returns a random float in [min,max]
+    return min + (max - min) * random_float(local_rand_state);
+}
+
 
 //Common Headers
 #include "color.cuh"

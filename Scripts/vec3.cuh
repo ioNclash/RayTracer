@@ -46,6 +46,22 @@ class vec3{
     __host__ __device__ inline float length_squared() const{
         return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
     }
+
+    //Device only cuda random vectors
+    __device__ static vec3 random(curandState *random_state) {
+        return vec3(random_float(random_state), 
+                    random_float(random_state), 
+                    random_float(random_state));
+
+    }
+
+    __device__ static vec3 random(curandState *random_state, float min, float max) {
+        return vec3(min + (max - min) * random_float(random_state),
+                    min + (max - min) * random_float(random_state),
+                    min + (max - min) * random_float(random_state));
+    }
+
+
     
 };
 
@@ -95,6 +111,26 @@ __host__ __device__ inline vec3 cross(const vec3& u, const vec3& v) {
 
 __host__ __device__ inline vec3 unit_vector(const vec3& v) {
     return v / v.length();
+}
+
+__device__ inline vec3 random_unit_vector(curandState *random_state){
+    while(true){
+        point3 p = point3::random(random_state, -1.0f, 1.0f);
+        float lensq = p.length_squared();
+        if(1e-30f<=lensq<= 1){ //1e-30f is a small value to avoid division by zero
+            return p/ sqrt(lensq);
+        }
+    }
+
+}
+
+__device__ inline vec3 random_on_hemisphere(curandState *random_state,const vec3& normal){
+    vec3 on_unit_sphere = random_unit_vector(random_state);
+    if(dot(on_unit_sphere, normal) > 0.0f) {
+        return on_unit_sphere; // In the same hemisphere
+    } else {
+        return -on_unit_sphere; // In the opposite hemisphere
+    }
 }
 
 #endif

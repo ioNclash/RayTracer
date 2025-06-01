@@ -10,11 +10,8 @@ __global__ void create_world(hittable **d_list, hittable **d_world ){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         *(d_list)   = new sphere(vec3(0,0,-1), 0.5f);
         *(d_list+1) = new sphere(vec3(0,-100.5f,-1), 100);
-        *(d_list+2) = new sphere(vec3(1,0,-1), 0.5f);
-        *(d_list+3) = new sphere(vec3(-1,0,-1), 0.5f);
-        *(d_list+4) = new sphere(vec3(0,1,-1), 0.5f);
 
-        *d_world    = new hittable_list(d_list,5);
+        *d_world    = new hittable_list(d_list,2);
     }
 
 }
@@ -31,7 +28,7 @@ __host__ int main(){
     camera cam;
 
     cam.set_aspect_ratio(16.0f/9.0f);
-    cam.set_image_width(1600);
+    cam.set_image_width(3840);
 
     //Allocate Camera Data
     camera *d_cam;
