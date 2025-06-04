@@ -2,6 +2,7 @@
 #define CAMERA_CUH
 
 #include "hittable.cuh"
+#include "material.cuh"
 
 class camera{
     public:
@@ -53,13 +54,19 @@ class camera{
 
     __device__ color ray_color(curandState *rand_state,const ray&r, hittable **world) {
         ray current_ray = r;
-        float current_attenuation = 1.0f;
-        for(int i=0; i<50; i++){
+        color current_attenuation = vec3(1.0f,1.0f,1.0f);
+        for(int i=0; i<sample_count; i++){
             hit_record rec;
             if ((*world)->hit(current_ray,interval(0.001f,infinity),rec)){
-                vec3 direction = rec.normal + random_unit_vector(rand_state);
-                current_attenuation *=0.5f; //Attenuation factor
-                current_ray = ray(rec.p,direction);
+                ray scattered;
+                color attenuation;
+                if (rec.mat_ptr->scatter(rand_state,current_ray,rec,attenuation,scattered)){
+                    current_attenuation *= attenuation;
+                    current_ray = scattered;
+                }
+                else{
+                    return color(0,0,0); //Ray absorbed
+                }
             }
             else{
                 vec3 unit_direction = unit_vector(current_ray.direction());

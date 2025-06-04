@@ -5,8 +5,8 @@
 
 class sphere: public hittable {
     public:
-    __device__ sphere(const point3& center, float radius):
-               center(center), radius(std::fmaxf(0,radius)){}
+    __device__ sphere(const point3& center, float radius,material *m):
+               center(center), radius(std::fmaxf(0,radius)),mat_ptr(m){}
     
     __device__ bool
     hit(const ray&r,interval ray_t, hit_record& rec)
@@ -35,6 +35,7 @@ class sphere: public hittable {
         rec.p = r.at(rec.t);
         vec3 outward_normal = (rec.p-center) /radius;
         rec.set_face_normal(r,outward_normal);
+        rec.mat_ptr = mat_ptr;
 
         return true;
 
@@ -44,6 +45,7 @@ class sphere: public hittable {
     private:
     point3 center;
     float radius;
+    material *mat_ptr;
 };
 
 #endif

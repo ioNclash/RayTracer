@@ -29,10 +29,18 @@ class vec3{
 
      __host__ __device__ inline vec3& operator*=(float t){
         e[0] *= t;
-        e[1] += t;
-        e[2] += t;
+        e[1] *= t;
+        e[2] *= t;
         return *this;
     }
+
+    __host__ __device__ inline vec3& operator*=(vec3& v){
+        e[0] *= v.e[0];
+        e[1] *= v.e[1];
+        e[2] *= v.e[2];
+        return *this;
+    }
+
 
     __host__ __device__ inline vec3& operator/=(float t) {
         return *this *= 1/t;
@@ -44,7 +52,13 @@ class vec3{
     }
 
     __host__ __device__ inline float length_squared() const{
-        return e[0]*e[0] + e[1]*e[1] + e[2]*e[2];
+        return e[0]*e[0] + e[1]*e[1] + e[2]*e[2] ;
+    }
+
+    __device__ bool near_zero() const{
+        // Return true if the vector is close to zero in all dimensions
+        float s = 1e-8f; // A small value to avoid division by zero
+        return (std::fabs(e[0]) < s) && (std::fabs(e[1]) < s) && (std::fabs(e[2]) < s);
     }
 
     //Device only cuda random vectors
@@ -131,6 +145,17 @@ __device__ inline vec3 random_on_hemisphere(curandState *random_state,const vec3
     } else {
         return -on_unit_sphere; // In the opposite hemisphere
     }
+}
+
+__device__ inline vec3 reflect(const vec3& v, const vec3& normal) {
+    return v - 2 * dot(v, normal) * normal;
+}
+
+__device__ inline vec3 refract(const vec3& uv, const vec3& normal, float etai_over_etat){
+    float cos_theta = std::fmin(dot(-uv,normal), 1.0f);
+    vec3 r_out_perp = etai_over_etat * (uv +cos_theta*normal);
+    vec3 r_out_parallel = -std::sqrt(std::fabs(1.0f - r_out_perp.length_squared())) * normal;
+    return r_out_perp + r_out_parallel;
 }
 
 #endif
