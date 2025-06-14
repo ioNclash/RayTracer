@@ -72,8 +72,8 @@ __host__ int main(){
     camera cam(
 
         16.0f/9.0f, //Aspect Ratio
-        120, //Image Width
-        100, //Samples per pixel
+        3840, //Image Width
+        500, //Samples per pixel
         50, //Max Depth
         20.0f, //Field of View
 
@@ -81,7 +81,7 @@ __host__ int main(){
         point3(0,0,0), //Look At
         vec3(0,1,0), //Up Vector
 
-        0.6f, //Defocus Angle 0 Means no defocus
+        0.2f, //Defocus Angle 0 Means no defocus
         10.0f //Focus Distance
     );
 
@@ -109,6 +109,14 @@ __host__ int main(){
     curandState * d_rand_state;
     checkCudaErrors(cudaMalloc((void **)&d_rand_state, num_pixels*sizeof(curandState))); //Random state for each pixel
 
+    //Initialise Render
+
+    dim3 blocks(d_cam->get_image_width()/tx+1,d_cam->get_image_height()/ty+1);
+    dim3 threads(tx,ty);
+    render_init<<<blocks, threads>>>(d_cam, d_rand_state);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
 
     //Make World of hittables
     hittable **d_list;
@@ -123,13 +131,7 @@ __host__ int main(){
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
-    //Render buffer
-
-    dim3 blocks(d_cam->get_image_width()/tx+1,d_cam->get_image_height()/ty+1);
-    dim3 threads(tx,ty);
-    render_init<<<blocks, threads>>>(d_cam, d_rand_state);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+ 
 
     render<<<blocks, threads>>>(fb,d_world,d_cam,d_rand_state);
     checkCudaErrors(cudaGetLastError());
