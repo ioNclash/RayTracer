@@ -5,6 +5,8 @@
 
 class sphere: public hittable {
     public:
+    material *mat_ptr;
+
     __device__ sphere(const point3& center, float radius,material *m):
                center(center), radius(std::fmaxf(0,radius)),mat_ptr(m){}
     
@@ -45,7 +47,7 @@ class sphere: public hittable {
     private:
     point3 center;
     float radius;
-    material *mat_ptr;
+
 };
 
 #endif

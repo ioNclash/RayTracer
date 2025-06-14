@@ -127,6 +127,17 @@ __host__ __device__ inline vec3 unit_vector(const vec3& v) {
     return v / v.length();
 }
 
+__device__ inline vec3 random_in_unit_disk(curandState *random_state){
+    while(true){
+        point3 p = point3(random_float(random_state,-1.0f,1.0f), 
+                          random_float(random_state,-1.0f,1.0f),
+                          0.0f);
+        if(p.length_squared() < 1.0f) {
+            return p;
+        }
+    }
+}
+
 __device__ inline vec3 random_unit_vector(curandState *random_state){
     while(true){
         point3 p = point3::random(random_state, -1.0f, 1.0f);
