@@ -7,14 +7,19 @@ class sphere: public hittable {
     public:
     material *mat_ptr;
 
-    __device__ sphere(const point3& center, float radius,material *m):
-               center(center), radius(std::fmaxf(0,radius)),mat_ptr(m){}
+    //Stationary Sphere Constructor
+    __device__ sphere(const point3& static_center, float radius,material *m):
+               center(static_center, vec3(0,0,0)), radius(std::fmaxf(0,radius)),mat_ptr(m){}
+    
+    //Moving Sphere Constructor
+    __device__ sphere(const point3& start_center, const point3& end_center, float radius,material*m):
+                center(start_center,end_center-start_center),radius(std::fmaxf(0,radius)),mat_ptr(m){}
     
     __device__ bool
     hit(const ray&r,interval ray_t, hit_record& rec)
     const override{
-
-        vec3 oc = center - r.origin();
+        point3 current_center = center.at(r.time());
+        vec3 oc = current_center - r.origin();
         float a = r.direction().length_squared();
         float h = dot(r.direction(),oc);
         float c = oc.length_squared() - radius*radius;
@@ -35,7 +40,7 @@ class sphere: public hittable {
 
         rec.t = root;
         rec.p = r.at(rec.t);
-        vec3 outward_normal = (rec.p-center) /radius;
+        vec3 outward_normal = (rec.p-current_center) /radius;
         rec.set_face_normal(r,outward_normal);
         rec.mat_ptr = mat_ptr;
 
@@ -43,9 +48,8 @@ class sphere: public hittable {
 
     }
     
-
     private:
-    point3 center;
+    ray center; //Center point and direction vector for moving spheres 
     float radius;
 
 };

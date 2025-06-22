@@ -33,7 +33,8 @@ __global__ void create_world(curandState *rand_state,hittable **d_list, hittable
                 if ((center - point3(4,0.2f,0)).length() > 0.9f){
                     if(choose_mat < 0.8f) { //Lambertian
                         color albedo = color::random(&local_rand_state) * color::random(&local_rand_state);
-                        d_list[(*d_count)++] = new sphere(center, 0.2F, new lambertian(albedo));
+                        point3 center2 = center + vec3(0, random_float(&local_rand_state,0,0.5f), 0);
+                        d_list[(*d_count)++] = new sphere(center, center2, 0.2F, new lambertian(albedo));
                     }
                     else if(choose_mat < 0.95f) { //Metal
                         color albedo = color::random(&local_rand_state, 0.5f, 1.0f);
@@ -66,38 +67,43 @@ __global__ void free_world(hittable **d_list, hittable **d_world,int num_hittabl
     delete *d_world;
 }
 
-
 __host__ int main(){
+    cudaError_t err = cudaSetDevice(0);
+if (err != cudaSuccess) {
+    std::cerr << "cudaSetDevice failed: " << cudaGetErrorString(err) << std::endl;
+    return 1;
+}
+
     //Create camera
-    camera cam(
-
-        16.0f/9.0f, //Aspect Ratio
-        3840, //Image Width
-        500, //Samples per pixel
-        50, //Max Depth
-        20.0f, //Field of View
-
-        point3(13,2,3), //Look From
-        point3(0,0,0), //Look At
-        vec3(0,1,0), //Up Vector
-
-        0.2f, //Defocus Angle 0 Means no defocus
-        10.0f //Focus Distance
+    camera cam;
+    initialize_camera(
+        cam,
+        16.0f/9.0f, //Aspect ratio
+        1200, //Image width
+        100, //Samples per pixel
+        50, //Max depth
+        20.0f, //Field of view in degrees
+        point3(13,2,3), //Look from
+        point3(0,0,0), //Look at
+        vec3(0,1,0), //Up vector
+        0.0f, //Defocus angle
+        10.0f //Focus distance
     );
+
 
     //Allocate Camera Data
     camera *d_cam;
-    checkCudaErrors(cudaMallocManaged((void**)&d_cam, sizeof(cam)));
-    *d_cam = cam;
+    checkCudaErrors(cudaMalloc((void**)&d_cam, sizeof(camera)));
+    checkCudaErrors(cudaMemcpy(d_cam, &cam, sizeof(camera), cudaMemcpyHostToDevice));
 
     //CUDA Image Division
     int tx = 8;
     int ty = 8;
 
-    std::cerr << "Rendering a " << d_cam->get_image_width() << "x" << d_cam->get_image_height() << " image ";
+    std::cerr << "Rendering a " << cam.image_width << "x" << cam.image_height << " image ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
-    int num_pixels = d_cam->get_image_width()*d_cam->get_image_height();
+    int num_pixels = cam.image_width*cam.image_height;
     size_t fb_size = 3*num_pixels*sizeof(float); //frame buffer
 
     //Allocate frame buffer
@@ -111,9 +117,9 @@ __host__ int main(){
 
     //Initialise Render
 
-    dim3 blocks(d_cam->get_image_width()/tx+1,d_cam->get_image_height()/ty+1);
+    dim3 blocks(cam.image_width/tx+1,cam.image_height/ty+1);
     dim3 threads(tx,ty);
-    render_init<<<blocks, threads>>>(d_cam, d_rand_state);
+    render_init<<<blocks, threads>>>(d_rand_state,d_cam); //Initialize the random state and camera
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
@@ -133,15 +139,15 @@ __host__ int main(){
 
  
 
-    render<<<blocks, threads>>>(fb,d_world,d_cam,d_rand_state);
+    render<<<blocks, threads>>>(d_rand_state,fb,d_world,d_cam);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
     //Write image
-    std::cout << "P3\n" << d_cam->get_image_width() << " " << d_cam->get_image_height() << "\n255\n";
-    for (int j = d_cam->get_image_height()-1; j >= 0; j--) {
-        for (int i = 0; i < d_cam->get_image_width(); i++) {
-            size_t pixel_index = j*d_cam->get_image_width() + i;
+    std::cout << "P3\n" << cam.image_width << " " << cam.image_height << "\n255\n";
+    for (int j = cam.image_height-1; j >= 0; j--) {
+        for (int i = 0; i < cam.image_width; i++) {
+            size_t pixel_index = j*cam.image_width + i;
             write_color(std::cout,fb[pixel_index]);
         }
     }
