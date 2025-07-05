@@ -6,6 +6,10 @@ class interval {
     float min,max;
    __host__ __device__ interval() : min(+infinity),max(-infinity) {}
     __host__ __device__ interval(float min, float max) : min(min),max(max) {}
+    __device__ interval(const interval& a, const interval& b){
+        min = a.min <= b.min ? a.min : b.min;
+        max = a.max >= b.max ? a.max : b.max;
+    }
 
     __device__ float size() const {
         return max-min;

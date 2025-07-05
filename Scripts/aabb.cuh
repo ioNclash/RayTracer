@@ -14,6 +14,12 @@ class aabb{
             z = (a[2] <= b[2]) ? interval(a[2], b[2]) : interval(b[2], a[2]);
         } 
 
+        __device__ aabb(const aabb& box0, aabb& box1){
+            x = interval(box0.x, box1.x);
+            y = interval(box0.y, box1.y);
+            z = interval(box0.z, box1.z);
+        }
+
         __device__ const interval& axis_interval(int n) const{
             if(n==1) return y;
             if(n==2) return z;

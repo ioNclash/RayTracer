@@ -97,12 +97,12 @@ __host__ void initialize_camera(
     }
 
 
-__device__ color ray_color(curandState *rand_state,camera* cam, ray&r, hittable **world) { 
+__device__ color ray_color(curandState *rand_state,camera* cam, ray&r, hittable *world) { 
     ray current_ray = r;
     color current_attenuation = vec3(1.0f,1.0f,1.0f);
     for(int i=0; i<cam->max_depth; i++){
         hit_record rec;
-        if ((*world)->hit(current_ray,interval(0.001f,infinity),rec)){
+        if (world->hit(current_ray,interval(0.001f,infinity),rec)){
             ray scattered;
             color attenuation;
             if (rec.mat_ptr->scatter(rand_state,current_ray,rec,attenuation,scattered)){
@@ -156,7 +156,7 @@ __global__ void render_init(curandState *rand_state, camera *cam) {
     curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
 }
 
-__global__ void render(curandState *rand_state,color *fb, hittable **world,camera *cam){
+__global__ void render(curandState *rand_state,color *fb, hittable *world,camera *cam){
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= cam->image_width) || (j >= cam->image_height)) return; //Due to block size, prevent rendering outside of image

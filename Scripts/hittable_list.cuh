@@ -2,17 +2,19 @@
 #define HITTABLE_LIST_CUH
 
 #include "aabb.cuh"
+#include "hittable.cuh"
 
 
 class hittable_list: public hittable{
     public:
-    __device__ hittable_list() {}
-    __device__ hittable_list(hittable **l, int n) {list =l; list_size=n;}
+    __device__ hittable_list(hittable** buffer,int capacity):size(0),capacity(capacity),list(buffer){}
+       
+
     __device__ bool hit(const ray& r, interval ray_t, hit_record &rec) const override{
         hit_record temp_rec;
         bool hit_anything = false;
         float closest_so_far = ray_t.max;
-        for(int i=0; i<list_size; i++){
+        for(int i=0; i<size; i++){
             if (list[i] -> hit(r,interval(ray_t.min, closest_so_far),temp_rec)){
                 hit_anything=true;
                 closest_so_far= temp_rec.t;
@@ -21,8 +23,30 @@ class hittable_list: public hittable{
         }
         return hit_anything;
     }
-    hittable **list;
-    int list_size;
+
+    __device__ void add(hittable* h){
+        if(size<capacity){
+            list[size++] = h;
+        }
+    }
+    __device__ int get_size() const {
+        return size;
+    }
+    __device__ int get_capacity() const {
+        return capacity;
+    }
+    __device__ hittable* get_item(int i) const { 
+        return (i < size) ? list[i] : nullptr; 
+    }
+
+    __device__ aabb bounding_box() const override { return bbox; }
+
+
+    private:
+        hittable **list;
+        int size;
+        int capacity;
+        aabb bbox;
 
 
 };
