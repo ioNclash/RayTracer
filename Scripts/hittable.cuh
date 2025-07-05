@@ -1,6 +1,8 @@
 #ifndef HITTABLE_CUH
 #define HITTABLE_CUH
 
+#include "aabb.cuh"
+
 class material;
 
 struct hit_record{

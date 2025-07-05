@@ -1,6 +1,8 @@
 #ifndef HITTABBLE_LIST_CUH
 #define HITTABLE_LIST_CUH
 
+#include "aabb.cuh"
+
 
 class hittable_list: public hittable{
     public:

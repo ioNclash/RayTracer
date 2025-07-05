@@ -25,6 +25,11 @@ class interval {
         return x;
     }
 
+    __device__ interval expand(float delta) const{
+        float padding = delta/2;
+        return interval(min-padding,max+padding);
+    }
+
     //Changed as cuda did not enjot memory qualifiers on data members
     __device__ static const interval empty(){
         return interval(+infinity, -infinity);
