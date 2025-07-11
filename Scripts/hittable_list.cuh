@@ -27,20 +27,18 @@ class hittable_list: public hittable{
     __device__ void add(hittable* h){
         if(size<capacity){
             list[size++] = h;
+            bbox = aabb(bbox,h->bounding_box());
         }
     }
-    __device__ int get_size() const {
-        return size;
-    }
-    __device__ int get_capacity() const {
-        return capacity;
-    }
-    __device__ hittable* get_item(int i) const { 
-        return (i < size) ? list[i] : nullptr; 
-    }
 
+    __device__ int get_size() const { return size; }
+    __device__ int get_capacity() const { return capacity; }
+    __device__ hittable* get_item(int i) const {
+        if (i < 0 || i >= size) return nullptr; // Check bounds
+        return list[i];
+    }
+    __device__ hittable** get_list() const { return list; }
     __device__ aabb bounding_box() const override { return bbox; }
-
 
     private:
         hittable **list;

@@ -1,8 +1,7 @@
 #include "utility_header.cuh"
 
+#include "bvh.cuh"
 #include "camera.cuh"
-#include "hittable.cuh"
-#include "hittable_list.cuh"
 #include "material.cuh"
 #include "sphere.cuh"
 
@@ -66,13 +65,12 @@ __global__ void free_world(hittable_list *world)
     // Free all objects in the list
     for (int i = 0; i < world->get_size(); i++)
     {
-        hittable *obj = world->get_item(i); // Add a get() method if needed
+        hittable *obj = world->get_item(i);
         if (obj)
         {
-            // If you know all objects are spheres:
             sphere *s = (sphere *)obj;
-            delete s->mat_ptr;
-            delete s;
+            cudaFree( s->mat_ptr);
+            cudaFree(s);
         }
     }
     // Free the world object itself
