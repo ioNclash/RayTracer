@@ -1,6 +1,8 @@
 # Compiler and flags
 NVCC = nvcc
-CUDAFLAGS = -std=c++17 -arch=sm_89
+CUDA_ARCH = -arch=sm_80
+CUDAFLAGS = -std=c++17 $(CUDA_ARCH) -rdc=true
+LDFLAGS = -lcudadevrt
 
 # Targets
 TARGET = Builds/rt
@@ -20,7 +22,7 @@ $(OUTPUT_PPM): build
 
 # Build target
 build: Scripts/main.cu
-	$(NVCC) $(CUDAFLAGS) -o $(TARGET) Scripts/main.cu
+	$(NVCC) $(CUDAFLAGS) -o $(TARGET) Scripts/main.cu $(LDFLAGS)
 
 # Clean target
 clean:
