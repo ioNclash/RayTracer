@@ -1,6 +1,7 @@
 #ifndef AABB_CUH
 #define AABB_CUH
 
+
 class aabb{
     public:
         interval x,y,z;

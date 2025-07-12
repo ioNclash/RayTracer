@@ -86,13 +86,15 @@ __host__ int main()
         return 1;
     }
 
+    checkCudaErrors(cudaDeviceSetLimit(cudaLimitStackSize, 8192));
+
     // Create camera
     camera cam;
     initialize_camera(
         cam,
         16.0f / 9.0f,     // Aspect ratio
-        1200,             // Image width
-        100,              // Samples per pixel
+        3840,             // Image width
+        500,              // Samples per pixel
         50,               // Max depth
         20.0f,            // Field of view in degrees
         point3(13, 2, 3), // Look from

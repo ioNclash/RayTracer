@@ -39,6 +39,11 @@ __device__ inline float random_float(curandState *local_rand_state, float min, f
     return min + (max - min) * random_float(local_rand_state);
 }
 
+__device__ inline int random_int(curandState *local_rand_state, int min, int max){
+    //Returns a random integer in [min,max]
+    return static_cast<int>(min + (max - min) * random_float(local_rand_state));
+}
+
 
 //Common Headers
 #include "color.cuh"

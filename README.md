@@ -9,18 +9,10 @@ A Path Tracer written in C++, based on the '[_Ray Tracing in One Weekend_](https
 - [Credits](#credits)
 
 ## Implementation
-This project was written in C++ using only the standard libraries, with custom classes defining vectors, rays, colors, camera, etc. This model currently allows for diffuse, reflective, and dielectric materials and spherical hit volumes. During image rendering, the canvas is divided into segments, each handled by different threads for speed of processing. Output is in a .ppm format.
+This project was written in C++ and the CUDA toolkit, with custom classes defining vectors, rays, colors, camera, etc. This model currently allows for diffuse, reflective, and dielectric materials and spherical hit volumes. During image rendering, the canvas is divided into segments, each handled by different threads for speed of processing. Output is in a .ppm format.
 
 ## How to Use
-To use, you can edit main.cpp to change the scene setup, altering the objects, image resolution and samples per pixel and camera position, focal distance and angle
-Then build main.cpp, and run the executable, piping the output to a .ppm file, then  use a ppm viewer to see image. I use feh on linux, there is also the option of converting the ppm to png    
-  
-**Example of use in bash**
-
-```console
-nicholas@easteregg:~Documents/RayTracer$ g++ Scripts/main.cpp -o Builds/build
-nicholas@easteregg:~Documents/RayTracer$ Builds/build > Outputs/image.ppm
-nicholas@easteregg:~Documents/RayTracer$ feh Outputs/image.ppm
+To use, just run the ```Easter@Egg:~$ console make ``` command in terminal ensuring you have nvcc and an NVIDIA GPU (sorry intel and amd users), and view the Output from the /Outputs folder, if you have eog installed run ```console Easter@Egg:~$ make show ``` in terminal to view on completion!
 ```
 
 # Credits

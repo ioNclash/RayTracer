@@ -2,7 +2,7 @@
 NVCC = nvcc
 CUDA_ARCH = -arch=sm_80
 CUDAFLAGS = -std=c++17 $(CUDA_ARCH) -rdc=true
-LDFLAGS = -lcudadevrt
+
 
 # Targets
 TARGET = Builds/rt
